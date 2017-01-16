@@ -1,0 +1,74 @@
+Sub windowsData()
+
+Dim obj As Object
+
+st = Now()
+
+Dim RegExp As Object
+Set RegExp = CreateObject("VBScript.RegExp")
+
+Dim strPattern As String
+
+RegExp.Pattern = "Dim Factor\s+([0-9]+)\s+Chg Weight"
+RegExp.Global = True
+RegExp.IgnoreCase = True
+
+Dim dataobj As New MSForms.DataObject
+Dim str As String
+Set obj = CreateObject("wscript.shell")
+
+'Capturing and triming data from excel sheet
+
+rowCounter = 4
+windowName = Sheets("Sheet1").Range("B1").Value
+windowName = Trim(windowName)
+obj.AppActivate windowName
+'Adding space to HAWB as per the length of the HAWB
+
+hb = 1
+Do While hb <> ""
+    obj.AppActivate windowName
+    hb = Sheets("Sheet1").Range("A" & rowCounter).Value
+    hb = Trim(hb)
+    spaceCount = 10 - Len(hb)
+    hb = WorksheetFunction.Rept(" ", spaceCount) & hb
+    Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys hb
+    Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys "{ENTER}"
+    Application.Wait (Now + TimeValue("00:00:02"))
+    obj.SendKeys "2"
+    Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys "{ENTER}"
+    
+    Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys "%es"
+    'Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys "^c"
+    Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys "{F3}"
+    Application.Wait (Now + TimeValue("00:00:01"))
+    obj.SendKeys "+{TAB}"
+    'Application.Wait (Now + TimeValue("00:00:01"))
+    
+    dataobj.GetFromClipboard
+    str = dataobj.GetText
+    
+    Set allMatches = RegExp.Execute(str)
+    result = ""
+    
+    If allMatches.count <> 0 Then
+    
+        dimFactor = allMatches.Item(0).SubMatches.Item(0)
+    
+    End If
+
+    
+    Worksheets("Sheet1").Range("B" & rowCounter).Value = dimFactor
+    
+    rowCounter = rowCounter + 1
+    
+    hb = Sheets("Sheet1").Range("A" & rowCounter).Value
+    
+    Loop
+    End Sub
